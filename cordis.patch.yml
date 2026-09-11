@@ -1,0 +1,7 @@
+# dsh-vision bundle layer: insert the vision-channel plugin row.
+# Kept minimal on purpose - this package is a plain cordis plugin
+# (exports name / inject / apply), the patch layer only mounts it.
+- insert:
+    - id: dsh-vision
+      name: 'dsh-vision'
+      config: {}

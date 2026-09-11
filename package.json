@@ -1,0 +1,62 @@
+{
+  "name": "dsh-vision",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "DSH Computer Use (vision + desktop control): see the Windows screen through the agent vision channel, drive mouse/keyboard with a Codex-style blue overlay (Esc to abort), plus a composer status pill.",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-locale"
+      ],
+      "platform": "web"
+    },
+    "engines": {
+      "dsh": ">=0.1.5-rc.1"
+    }
+  },
+  "files": [
+    "lib",
+    "scripts",
+    "cordis.patch.yml",
+    "dsh.plugin.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzy6-a/dsh-vision.git"
+  },
+  "homepage": "https://github.com/zzy6-a/dsh-vision",
+  "bugs": {
+    "url": "https://github.com/zzy6-a/dsh-vision/issues"
+  },
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "computer-use",
+    "vision",
+    "screenshot",
+    "desktop-automation",
+    "windows",
+    "wsl"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "pack": "npm pack --silent"
+  }
+}
