@@ -118,6 +118,16 @@ dsh-vision/
 
 ---
 
+## 计费与隐私
+
+- **插件本身零网络请求**：不调用任何 API，只把截图存进本地附件库并把图片块交给宿主
+- 图片最终**发给当前会话选中的模型路由**（DSH 的模型适配器负责发请求）
+- **官方路由安全闸（默认开启）**：若检测到会话走的是官方 API（provider 含 `official`），
+  `view_screen` / `view_image` 会**直接拒绝**并提示切换路由，避免静默消耗官方额度。
+  确需放行时设环境变量 `DSH_VISION_ALLOW_OFFICIAL=1`
+- 走官方路由时单图视觉计费约 **369 tokens**（DSH 上限 384）；走自建/订阅路由则按该路由口径
+- 不想让截图进入模型时，可用 `scripts/wocr.ps1`（Windows 本地 OCR，**零 API 成本**，但只能拿文字）
+
 ## 已知限制
 
 - **Chromium 忽略 `KEYEVENTF_UNICODE` 注入**：往 Edge/Chrome 打字请用剪贴板模式（`computer_type` 的 `auto` 已自动处理）
