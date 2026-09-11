@@ -2,8 +2,8 @@
   [Parameter(Mandatory=$true)][string]$Action,
   [int]$X = -1, [int]$Y = -1,
   [string]$Text = '',
-  [int]$Steps = 25,
-  [int]$DelayMs = 10,
+  [int]$Steps = 12,
+  [int]$DelayMs = 6,
   [int]$JitterMs = 30,
   [string]$Keys = '',
   [int]$Wheel = 0,
@@ -86,9 +86,9 @@ function Send-Keys([string]$spec) {
       elseif ($p -match '^[0-9]$') { $main = [byte](0x30 + [int]$p) }
       else { throw "unknown key: $p" }
     }
-    foreach ($m in $mods) { [CU.W]::Key($m, $false); Start-Sleep -Milliseconds 30 }
-    if ($main -ne $null) { [CU.W]::Key($main, $false); Start-Sleep -Milliseconds 30; [CU.W]::Key($main, $true); Start-Sleep -Milliseconds 30 }
-    foreach ($m in ($mods | Sort-Object -Descending)) { [CU.W]::Key($m, $true); Start-Sleep -Milliseconds 30 }
+    foreach ($m in $mods) { [CU.W]::Key($m, $false); Start-Sleep -Milliseconds 10 }
+    if ($main -ne $null) { [CU.W]::Key($main, $false); Start-Sleep -Milliseconds 10; [CU.W]::Key($main, $true); Start-Sleep -Milliseconds 10 }
+    foreach ($m in ($mods | Sort-Object -Descending)) { [CU.W]::Key($m, $true); Start-Sleep -Milliseconds 10 }
   }
 }
 function Save-Shot([string]$path) {
@@ -106,10 +106,10 @@ switch ($Action) {
   'pos'   { $p = Get-Pos; Write-Output ("POS " + $p.X + "," + $p.Y) }
   'fg'    { $h = [CU.W]::GetForegroundWindow(); $pid2 = 0; [CU.W]::GetWindowThreadProcessId($h, [ref]$pid2) | Out-Null; $pr = Get-Process -Id $pid2 -ErrorAction SilentlyContinue; Write-Output ("FG pid=" + $pid2 + " name=" + $pr.ProcessName + " title=" + $pr.MainWindowTitle) }
   'move'  { Set-CuState 'moving'; Move-Smooth $X $Y $Steps $DelayMs; $p = Get-Pos; Set-CuState 'idle'; Write-Output ("POS " + $p.X + "," + $p.Y) }
-  'click' { if ($X -ge 0) { Move-Smooth $X $Y $Steps $DelayMs }; $pp = Get-Pos; Set-CuState 'clicking' $pp.X $pp.Y; [CU.W]::mouse_event(0x0002,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 60; [CU.W]::mouse_event(0x0004,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 260; Set-CuState 'idle'; Write-Output 'CLICK' }
-  'dblclick' { if ($X -ge 0) { Move-Smooth $X $Y $Steps $DelayMs }; [CU.W]::mouse_event(0x0002,0,0,0,[System.UIntPtr]::Zero); [CU.W]::mouse_event(0x0004,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 80; [CU.W]::mouse_event(0x0002,0,0,0,[System.UIntPtr]::Zero); [CU.W]::mouse_event(0x0004,0,0,0,[System.UIntPtr]::Zero); Write-Output 'DBLCLICK' }
-  'rclick' { if ($X -ge 0) { Move-Smooth $X $Y $Steps $DelayMs }; [CU.W]::mouse_event(0x0008,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 60; [CU.W]::mouse_event(0x0010,0,0,0,[System.UIntPtr]::Zero); Write-Output 'RCLICK' }
-  'type'  { Set-CuState 'typing'; Set-Clipboard -Value $Text; Start-Sleep -Milliseconds 120; Send-Keys 'ctrl+v'; Start-Sleep -Milliseconds 150; Start-Sleep -Milliseconds 300; Set-CuState 'idle'; Write-Output ("TYPED " + $Text.Length + " chars") }
+  'click' { if ($X -ge 0) { Move-Smooth $X $Y $Steps $DelayMs }; $pp = Get-Pos; Set-CuState 'clicking' $pp.X $pp.Y; [CU.W]::mouse_event(0x0002,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 35; [CU.W]::mouse_event(0x0004,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 120; Set-CuState 'idle'; Write-Output 'CLICK' }
+  'dblclick' { if ($X -ge 0) { Move-Smooth $X $Y $Steps $DelayMs }; [CU.W]::mouse_event(0x0002,0,0,0,[System.UIntPtr]::Zero); [CU.W]::mouse_event(0x0004,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 45; [CU.W]::mouse_event(0x0002,0,0,0,[System.UIntPtr]::Zero); [CU.W]::mouse_event(0x0004,0,0,0,[System.UIntPtr]::Zero); Write-Output 'DBLCLICK' }
+  'rclick' { if ($X -ge 0) { Move-Smooth $X $Y $Steps $DelayMs }; [CU.W]::mouse_event(0x0008,0,0,0,[System.UIntPtr]::Zero); Start-Sleep -Milliseconds 35; [CU.W]::mouse_event(0x0010,0,0,0,[System.UIntPtr]::Zero); Write-Output 'RCLICK' }
+  'type'  { Set-CuState 'typing'; Set-Clipboard -Value $Text; Start-Sleep -Milliseconds 50; Send-Keys 'ctrl+v'; Start-Sleep -Milliseconds 70; Start-Sleep -Milliseconds 100; Set-CuState 'idle'; Write-Output ("TYPED " + $Text.Length + " chars") }
   'typehuman' {
     Set-CuState 'typing'
     $n = 0
@@ -121,11 +121,11 @@ switch ($Action) {
       Start-Sleep -Milliseconds $d
       $n++
     }
-    Start-Sleep -Milliseconds 300
+    Start-Sleep -Milliseconds 100
     Set-CuState 'idle'
     Write-Output ("TYPED_HUMAN " + $n + " chars")
   }
-  'keys'  { Set-CuState 'typing'; Send-Keys $Keys; Start-Sleep -Milliseconds 250; Set-CuState 'idle'; Write-Output ("KEYS " + $Keys) }
+  'keys'  { Set-CuState 'typing'; Send-Keys $Keys; Start-Sleep -Milliseconds 90; Set-CuState 'idle'; Write-Output ("KEYS " + $Keys) }
   'wheel' { [CU.W]::mouse_event(0x0800,0,0,$Wheel,[System.UIntPtr]::Zero); Write-Output ("WHEEL " + $Wheel) }
   'shot'  { Save-Shot $Out; Write-Output ("SHOT " + $Out) }
   'clear-cancel' {

@@ -1,6 +1,6 @@
 {
   "id": "zzy6-a/dsh-vision",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./lib/index.js",
   "description": "DSH Computer Use: agent vision channel (screen/image into context) + desktop control tools (mouse/keyboard) with a Codex-style overlay, Esc abort sentinel, and a composer status pill.",
   "engines": {

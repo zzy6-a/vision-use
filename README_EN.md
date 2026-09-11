@@ -38,8 +38,9 @@ English | [中文](README.md)
 ```
 
 - **One cursor set** (arrow / I-beam / hand) in a unified blue-and-white gradient, while **keeping Windows' native context switching**
+- **Overlay always on**: every hands operation (move/click/type/key) is forced to bring up the overlay first — no silent control
 - **Esc abort**: the keypress writes a cancel flag → the overlay exits → every subsequent action is rejected
-- **Idle auto-close**: the overlay packs up after 30 seconds without a tool call (`idle_seconds`, 0 = never)
+- **Task-level keep-alive**: while the agent is still working in this turn (thinking or running other tools), the overlay stays up; it packs up about 4 seconds after the turn ends. The overlay's own idle timeout remains as a fallback (`idle_seconds`, default 30, 0 = disable fallback)
 - **Status pill under the composer**: colored dot + `CU idle/move/type/click` + a Stop button
 
 ---
@@ -49,7 +50,7 @@ English | [中文](README.md)
 ### Option 1: GitHub Release (recommended)
 
 ```bash
-dsh plugin --profile web add https://github.com/zzy6-a/dsh-vision/releases/download/v0.1.0/dsh-vision-0.1.0.tgz
+dsh plugin --profile web add https://github.com/zzy6-a/dsh-vision/releases/download/v0.1.1/dsh-vision-0.1.1.tgz
 ```
 
 ### Option 2: git source
@@ -113,7 +114,7 @@ dsh-vision/
 
 | Parameter | Default | Description |
 |---|---|---|
-| `computer_overlay start idle_seconds` | `30` | Seconds of inactivity before the overlay closes automatically (0 = never) |
+| `computer_overlay start idle_seconds` | `30` | Overlay idle-timeout fallback; during an active task the plugin keeps refreshing the heartbeat, so it will not vanish while the agent is thinking (0 = disable fallback) |
 | `-MaxSeconds` | `0` | Maximum overlay lifetime (0 = unlimited) |
 | `-NoCursorChange` | off | Do not install the blue cursor set (keep the system default) |
 

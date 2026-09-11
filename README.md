@@ -38,8 +38,9 @@
 ```
 
 - **整套光标**（箭头 / I 形 / 手指）都是统一的蓝白渐变风格，且**保留 Windows 原生语境切换**
+- **强制覆盖层**：所有 hands 操作（move/click/type/key）都会先强制拉起覆盖层，不存在“静默操作”
 - **ESC 中止**：按下即写取消标志 → 覆盖层退出 → 后续所有动作被拒绝
-- **空闲自动关**：默认 30 秒无工具调用自动收工（可配 `idle_seconds`，0 = 不自动关）
+- **任务级保活**：只要本回合 agent 还在工作（思考 / 执行其他工具），覆盖层就不会收；回合结束后约 4 秒收起。覆盖层自身仍有空闲兜底（`idle_seconds`，默认 30，0 = 关闭兜底）
 - **输入框下方的状态胶囊**：彩色圆点 + `CU 待命/移动/输入/点击` + 「停止」按钮
 
 ---
@@ -49,7 +50,7 @@
 ### 方式一：GitHub Release（推荐）
 
 ```bash
-dsh plugin --profile web add https://github.com/zzy6-a/dsh-vision/releases/download/v0.1.0/dsh-vision-0.1.0.tgz
+dsh plugin --profile web add https://github.com/zzy6-a/dsh-vision/releases/download/v0.1.1/dsh-vision-0.1.1.tgz
 ```
 
 ### 方式二：git 源
@@ -113,7 +114,7 @@ dsh-vision/
 
 | 参数 | 默认 | 说明 |
 |---|---|---|
-| `computer_overlay start idle_seconds` | `30` | 空闲多少秒自动关闭覆盖层（0 = 永不）|
+| `computer_overlay start idle_seconds` | `30` | 覆盖层自身的空闲兜底秒数；任务进行中插件会持续续心跳，不会在思考时消失（0 = 关闭兜底）|
 | `-MaxSeconds` | `0` | 覆盖层最长存活时间（0 = 不限）|
 | `-NoCursorChange` | 关 | 不安装蓝色光标套装（保留系统默认光标）|
 
