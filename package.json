@@ -1,6 +1,6 @@
 {
   "name": "dsh-vision",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "DSH Computer Use (vision + desktop control, auto-detects Windows native or WSL): see the Windows screen through the agent vision channel, drive mouse/keyboard with a Codex-style blue overlay (Esc to abort), plus a composer status pill.",
   "main": "./lib/index.js",
