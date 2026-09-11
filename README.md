@@ -1,9 +1,12 @@
 # DSH Computer Use · dsh-vision
 
+[English](README_EN.md) | 中文
+
 > 让 DeepSeek Harness 的 Agent **真正看见你的屏幕、并动手操作 Windows 桌面** —— 带 Codex 风格的蓝色操作覆盖层（按 **Esc** 随时中止）。
 
-[![Release](https://img.shields.io/github/v/release/zzy6-a/dsh-vision?label=release)](https://github.com/zzy6-a/dsh-vision/releases)
+[![Download](https://img.shields.io/badge/Download-latest-2e7d32?style=flat&logo=github&logoColor=white)](https://github.com/zzy6-a/dsh-vision/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-2f6fed)](https://github.com/topics/dsh-plugin)
 
 ---
 
@@ -140,6 +143,11 @@ dsh-vision/
 ## 相关项目
 
 - [dsh-upgrade-guard](https://github.com/zzy6-a/dsh-upgrade-guard) —— DSH 升级兼容性守卫（同作者的配套插件）
+
+## Contributors / 致谢
+
+- [zzy6-a](https://github.com/zzy6-a) — 作者
+- DeepSeek V4.1 — 架构设计、实现、测试与发布流程
 
 ## 许可证
 
