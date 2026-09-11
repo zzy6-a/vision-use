@@ -20,7 +20,7 @@
 | 👁 **看** | `view_image` | 把任意图片文件送进视觉通道（Linux / Windows 路径都行）|
 | 🖱 **动** | `computer_move` | 光标平滑滑行到 (x,y) |
 | 🖱 **动** | `computer_click` | 左/右/双击，带点击涟漪 |
-| ⌨️ **动** | `computer_type` | 输入文字（自动判别 Chromium 走剪贴板 / WinUI 走 SendInput）|
+| ⌨️ **动** | `computer_type` | 输入文字（默认 **VK 真实按键逐键注入**，零剪贴板；中文走输入法：`computer_key` 发拼音 → `space`/数字上屏）|
 | ⌨️ **动** | `computer_key` | 组合键（`ctrl+t` / `enter` / `alt+f4` …）|
 | 🎛 **控** | `computer_overlay` | 启停操作覆盖层（start/stop/status，可设空闲自动关）|
 | 📊 **控** | `computer_status` | 覆盖层状态 / ESC 标志 / 当前模式 / 光标位置 |
@@ -149,7 +149,9 @@ vision-use/
 
 ## 已知限制
 
-- **Chromium 忽略 `KEYEVENTF_UNICODE` 注入**：往 Edge/Chrome 打字请用剪贴板模式（`computer_type` 的 `auto` 已自动处理）
+- **Chromium 忽略 `KEYEVENTF_UNICODE` 注入**：往 Edge/Chrome/微信打字用 `typevk`（真实 VK 按键，跨应用通用）
+- **中文/非 ASCII 走输入法**：`computer_key` 依次发拼音字母（如 `n,i,h,a,o`）→ `computer_key` `space`（或数字键选候选）上屏；`computer_type` 的默认路径会**明确拒绝**非 ASCII 而不是偷偷回退剪贴板
+- **剪贴板模式默认关闭**：仅在显式 `method: 'clipboard'` 时启用（注意：它会覆盖用户剪贴板内容）
 - **WinUI（记事本等）不认注入的 Ctrl 组合键**：`computer_key` 对这类应用可能无效
 - **自绘 UI 的 UIA 坐标不可信**（Edge 标签栏、Win11 记事本标签页会返回 ∞ 或错位）：请先 `view_screen` 肉眼定位再点
 - **带自绘光标的软件**（游戏、部分 Electron 应用）无法被系统级光标替换覆盖

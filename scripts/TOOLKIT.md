@@ -20,7 +20,8 @@ Agent 操作 Windows 桌面（Windows 原生 / WSL + Windows，插件自动识�
 | `pos` / `fg` | 当前光标位置 / 前台窗口 |
 | `move -X -Y [-Steps 12 -DelayMs 6]` | 平滑移动（默认 12 步 × 6ms，追求响应速度） |
 | `click / dblclick / rclick [-X -Y ...]` | 鼠标点击（带坐标则先平滑移动） |
-| `type -Text "..."` | 剪贴板粘贴式输入（Chromium 可用） |
+| `typevk -Text "..."` | **模拟键盘逐键注入（VK，默认路线）**：真实按键事件，跨应用通用（含 Chromium/微信），零剪贴板；非 ASCII 直接报错并提示走输入法 |
+| `type -Text "..."` | 剪贴板粘贴式输入 —— **仅当调用方显式指定 `method:'clipboard'` 时才用**（默认禁用） |
 | `typehuman -Text "..." [-DelayMs 55 -JitterMs 18]` | **SendInput Unicode 逐字输入**（WinUI 应用可用；**Chromium 会忽略**） |
 | `keys -Keys "ctrl+t,enter,esc"` | VK 组合键（Edge 接受 Ctrl 组合；WinUI 应用如记事本不接受） |
 | `wheel -Wheel 120` | 滚轮 |
@@ -43,10 +44,11 @@ Agent 操作 Windows 桌面（Windows 原生 / WSL + Windows，插件自动识�
 2. **点完立刻再看**：验证是否按预期发生
 3. **绝不复用缓存坐标**：标签栏/按钮会随内容移动
 4. **自绘 UI 的 UIA 矩形不可信**：Edge 标签栏、Win11 记事本标签页会返回错误坐标或 ∞ —— 一律肉眼确认
-5. **输入方式按目标选**：
-   - Chromium（Edge/Chrome）：`type`（剪贴板）或 UIA `ValuePattern.SetValue`（推荐，零剪贴板）；`typehuman` 无效
-   - WinUI（记事本）：`typehuman`（SendInput Unicode）有效；Ctrl 组合键无效
-   - 通用兜底：UIA `ValuePattern.SetValue` / `InvokePattern`（不需要焦点、不依赖坐标）
+5. **输入方式（用户铁律：一律走模拟键盘，禁止剪贴板）**：
+   - ASCII：`typevk`（VK 逐键注入，跨应用通用，含 Chromium/微信）
+   - 中文/非 ASCII：**走输入法** —— `keys` 发拼音字母（如 `n,i,h,a,o`），组合出候选后再 `keys space`（或数字键选候选）上屏
+   - `type`（剪贴板）只在显式 `method:'clipboard'` 时使用（默认不再走）；`typehuman`（SendInput Unicode 直注）在 Chromium/微信类 UI 会被静默忽略
+   - 兜底（非键盘路线，仅键盘不可用时）：UIA `ValuePattern.SetValue` / `InvokePattern`（不需要焦点、不依赖坐标）
 6. **前台锁定**：`SetForegroundWindow` 常失败 → 先模拟一次 ALT 键再调用（经典技巧）
 7. **模态对话框会阻塞一切**：检测到操作"无效"时，先 `view_screen` 看有没有对话框在等你
 8. **PowerShell 5.1 坑**：脚本文件要 UTF-8 BOM（否则中文按 ANSI 读）；输出中文先设 `[Console]::OutputEncoding`

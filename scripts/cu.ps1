@@ -126,6 +126,52 @@ switch ($Action) {
     Set-CuState 'idle'
     Write-Output ("TYPED_HUMAN " + $n + " chars")
   }
+  'typevk' {
+    Set-CuState 'typing'
+    $SHIFT = [byte]0x10
+    $map = @{}
+    for ($i = 0; $i -lt 26; $i++) {
+      $map[[string][char](0x61 + $i)] = @([byte](0x41 + $i), $false)
+      $map[[string][char](0x41 + $i)] = @([byte](0x41 + $i), $true)
+    }
+    for ($i = 0; $i -lt 10; $i++) { $map[[string][char](0x30 + $i)] = @([byte](0x30 + $i), $false) }
+    $alt = @{
+      ' ' = @(0x20, $false)
+      '!' = @(0x31, $true); '@' = @(0x32, $true); '#' = @(0x33, $true); '$' = @(0x34, $true)
+      '%' = @(0x35, $true); '^' = @(0x36, $true); '&' = @(0x37, $true); '*' = @(0x38, $true)
+      '(' = @(0x39, $true); ')' = @(0x30, $true)
+      '-' = @(0xBD, $false); '_' = @(0xBD, $true); '=' = @(0xBB, $false); '+' = @(0xBB, $true)
+      '[' = @(0xDB, $false); '{' = @(0xDB, $true); ']' = @(0xDD, $false); '}' = @(0xDD, $true)
+      '\' = @(0xDC, $false); '|' = @(0xDC, $true)
+      ';' = @(0xBA, $false); ':' = @(0xBA, $true)
+      "'" = @(0xDE, $false); '"' = @(0xDE, $true)
+      ',' = @(0xBC, $false); '<' = @(0xBC, $true)
+      '.' = @(0xBE, $false); '>' = @(0xBE, $true)
+      '/' = @(0xBF, $false); '?' = @(0xBF, $true)
+      '`' = @(0xC0, $false); '~' = @(0xC0, $true)
+      "`n" = @(0x0D, $false); "`t" = @(0x09, $false)
+    }
+    $n = 0; $bad = New-Object System.Collections.ArrayList
+    foreach ($ch in $Text.ToCharArray()) {
+      $k = [string]$ch
+      if ($k -eq "`r") { continue }
+      if ($map.ContainsKey($k)) { $v = $map[$k] } elseif ($alt.ContainsKey($k)) { $v = $alt[$k] } else { [void]$bad.Add($k); continue }
+      $vk = [byte]$v[0]; $sh = [bool]$v[1]
+      if ($sh) { [CU.W]::Key($SHIFT, $false); Start-Sleep -Milliseconds 8 }
+      [CU.W]::Key($vk, $false); Start-Sleep -Milliseconds 14; [CU.W]::Key($vk, $true)
+      if ($sh) { Start-Sleep -Milliseconds 8; [CU.W]::Key($SHIFT, $true) }
+      Start-Sleep -Milliseconds 26
+      $n++
+    }
+    Start-Sleep -Milliseconds 60
+    Set-CuState 'idle'
+    if ($bad.Count -gt 0) {
+      [Console]::Error.WriteLine('VK_UNSUPPORTED non-ASCII: ' + ($bad -join '') + ' >>> 中文/非 ASCII 请走输入法路线: computer_key 发拼音字母, 再 computer_key space/数字键 上屏')
+      Write-Output ('VK_PARTIAL ' + $n + ' chars')
+      exit 2
+    }
+    Write-Output ('VK_TYPED ' + $n + ' chars')
+  }
   'keys'  { Set-CuState 'typing'; Send-Keys $Keys; Start-Sleep -Milliseconds 90; Set-CuState 'idle'; Write-Output ("KEYS " + $Keys) }
   'wheel' { [CU.W]::mouse_event(0x0800,0,0,$Wheel,[System.UIntPtr]::Zero); Write-Output ("WHEEL " + $Wheel) }
   'shot'  { Save-Shot $Out; Write-Output ("SHOT " + $Out) }

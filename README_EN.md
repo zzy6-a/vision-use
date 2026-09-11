@@ -20,7 +20,7 @@ English | [中文](README.md)
 | 👁 **See** | `view_image` | Push any image file (Linux or Windows path) into the vision channel |
 | 🖱 **Act** | `computer_move` | Glide the cursor smoothly to (x, y) |
 | 🖱 **Act** | `computer_click` | Left / right / double click with a click ripple |
-| ⌨️ **Act** | `computer_type` | Type text (automatically picks clipboard for Chromium, SendInput for WinUI) |
+| ⌨️ **Act** | `computer_type` | Type text (default: **real VK keystrokes**, zero clipboard; for Chinese use the IME route: `computer_key` pinyin → `space`/digit to commit) |
 | ⌨️ **Act** | `computer_key` | Key combinations (`ctrl+t`, `enter`, `alt+f4`, …) |
 | 🎛 **Control** | `computer_overlay` | Start / stop / status the overlay (configurable idle auto-close) |
 | 📊 **Control** | `computer_status` | Overlay state / Esc flag / current mode / cursor position |
@@ -149,7 +149,9 @@ Privacy note: screenshots enter the current session context as image attachments
 
 ## Known limitations
 
-- **Chromium ignores `KEYEVENTF_UNICODE` injection**: typing into Edge/Chrome uses clipboard mode (`computer_type`'s `auto` already handles this)
+- **Chromium ignores `KEYEVENTF_UNICODE` injection**: type into Edge/Chrome/WeChat with `typevk` (real VK keystrokes, works across apps)
+- **Chinese / non-ASCII goes through the IME**: `computer_key` with pinyin letters (e.g. `n,i,h,a,o`) then `computer_key` `space` (or a digit) to commit; the default `computer_type` path **rejects** non-ASCII on purpose instead of silently falling back to the clipboard
+- **Clipboard mode is opt-in**: only enabled via `method: 'clipboard'` (note: it overwrites the user's clipboard content)
 - **WinUI (Notepad, etc.) does not accept injected Ctrl combinations**: `computer_key` may not work in those apps
 - **UIA coordinates are unreliable in custom-drawn UIs** (Edge tab bar, Windows 11 Notepad tabs return ∞ or wrong offsets): use `view_screen` to locate targets visually first
 - **Software with its own drawn cursor** (games, some Electron apps) cannot be overridden by the system-level cursor replacement
