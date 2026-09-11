@@ -1,8 +1,8 @@
 {
   "name": "dsh-vision",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
-  "description": "DSH Computer Use (vision + desktop control): see the Windows screen through the agent vision channel, drive mouse/keyboard with a Codex-style blue overlay (Esc to abort), plus a composer status pill.",
+  "description": "DSH Computer Use (vision + desktop control, auto-detects Windows native or WSL): see the Windows screen through the agent vision channel, drive mouse/keyboard with a Codex-style blue overlay (Esc to abort), plus a composer status pill.",
   "main": "./lib/index.js",
   "exports": {
     ".": "./lib/index.js",
@@ -36,11 +36,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zzy6-a/dsh-vision.git"
+    "url": "git+https://github.com/zzy6-a/vision-use.git"
   },
-  "homepage": "https://github.com/zzy6-a/dsh-vision",
+  "homepage": "https://github.com/zzy6-a/vision-use",
   "bugs": {
-    "url": "https://github.com/zzy6-a/dsh-vision/issues"
+    "url": "https://github.com/zzy6-a/vision-use/issues"
   },
   "keywords": [
     "deepseek",

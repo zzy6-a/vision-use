@@ -7,7 +7,8 @@
   [int]$IntervalMs = 16
 )
 $ErrorActionPreference = 'Stop'
-$BOOTLOG = '\\wsl.localhost\Ubuntu\tmp\ov_boot.log'
+$FlagDir = if ($env:DSH_VISION_FLAG_DIR) { $env:DSH_VISION_FLAG_DIR } else { $env:TEMP }
+$BOOTLOG = Join-Path $FlagDir 'ov_boot.log'
 function BootLog([string]$m) { try { Add-Content -LiteralPath $BOOTLOG -Value ((Get-Date).ToString('HH:mm:ss') + ' ' + $m) -ErrorAction SilentlyContinue } catch {} }
 BootLog ("boot action=" + $Action)
 try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch { BootLog ("console-encoding-skip: " + $_.Exception.Message) }
@@ -200,14 +201,12 @@ public static string GetMode() { return _autoMode; }
 public static int EscDown() { return (GetAsyncKeyState(0x1B) & 0x8000) != 0 ? 1 : 0; }
 '@
 
-$WSL_TMP = '\\wsl.localhost\Ubuntu\tmp'
-function FlagPath([string]$k) { return (Join-Path $env:TEMP ("dsh_agent_" + $k + ".flag")) }
-function NixPath([string]$k) { return ($WSL_TMP + '\dsh_agent_' + $k + '.flag') }
-function SetFlag([string]$k, [string]$c) { Set-Content -LiteralPath (FlagPath $k) -Value $c -Encoding UTF8 -ErrorAction SilentlyContinue; Set-Content -LiteralPath (NixPath $k) -Value $c -Encoding UTF8 -ErrorAction SilentlyContinue }
-function ClearFlag([string]$k) { Remove-Item -LiteralPath (FlagPath $k) -Force -ErrorAction SilentlyContinue; Remove-Item -LiteralPath (NixPath $k) -Force -ErrorAction SilentlyContinue }
+function FlagPath([string]$k) { return (Join-Path $FlagDir ("dsh_agent_" + $k + ".flag")) }
+function SetFlag([string]$k, [string]$c) { Set-Content -LiteralPath (FlagPath $k) -Value $c -Encoding UTF8 -ErrorAction SilentlyContinue }
+function ClearFlag([string]$k) { Remove-Item -LiteralPath (FlagPath $k) -Force -ErrorAction SilentlyContinue }
 function RestoreCursor { [CU.Eng]::SystemParametersInfo(0x0057, 0, [System.IntPtr]::Zero, 3) | Out-Null }
 function Col([int]$r, [int]$g, [int]$b, [int]$a) { return [System.Drawing.Color]::FromArgb($a, $r, $g, $b) }
-function StatePath { return (Join-Path $env:TEMP 'dsh_cu_state.json') }
+function StatePath { return (Join-Path $FlagDir 'dsh_cu_state.json') }
 
 if ($Action -eq 'status') {
   foreach ($k in @('active','cancel','stop')) { $p = FlagPath $k; Write-Output ("FLAG " + $k + " exists=" + (Test-Path -LiteralPath $p)) }
@@ -480,8 +479,8 @@ $tick.Add_Tick({
     }
     if (Test-Path -LiteralPath (FlagPath 'stop')) { [System.Windows.Forms.Application]::Exit(); return }
     if ($IdleSeconds -gt 0 -and ($script:n % 30) -eq 0) {
-      $hb1 = Join-Path $env:TEMP 'dsh_agent_heartbeat'
-      $hb2 = '\\wsl.localhost\Ubuntu\tmp\dsh_agent_heartbeat'
+      $hb1 = Join-Path $FlagDir 'dsh_agent_heartbeat'
+      $hb2 = Join-Path $env:TEMP 'dsh_agent_heartbeat'
       $lastUtc = $script:startTs
       foreach ($hb in @($hb1, $hb2)) {
         if (Test-Path -LiteralPath $hb) {

@@ -1,10 +1,12 @@
-# DSH Computer Use · dsh-vision
+# Vision Use · DSH Computer Use
 
 English | [中文](README.md)
 
+> Repo: `vision-use` · Package: `dsh-vision`
+>
 > Let the DeepSeek Harness agent **actually see your screen and operate the Windows desktop** — with a Codex-style blue overlay (press **Esc** to abort at any time).
 
-[![Download](https://img.shields.io/badge/Download-latest-2e7d32?style=flat&logo=github&logoColor=white)](https://github.com/zzy6-a/dsh-vision/releases/latest)
+[![Download](https://img.shields.io/badge/Download-latest-2e7d32?style=flat&logo=github&logoColor=white)](https://github.com/zzy6-a/vision-use/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-2f6fed)](https://github.com/topics/dsh-plugin)
 
@@ -50,13 +52,13 @@ English | [中文](README.md)
 ### Option 1: GitHub Release (recommended)
 
 ```bash
-dsh plugin --profile web add https://github.com/zzy6-a/dsh-vision/releases/download/v0.1.1/dsh-vision-0.1.1.tgz
+dsh plugin --profile web add https://github.com/zzy6-a/vision-use/releases/download/v0.2.0/dsh-vision-0.2.0.tgz
 ```
 
 ### Option 2: git source
 
 ```bash
-dsh plugin --profile web add github:zzy6-a/dsh-vision
+dsh plugin --profile web add github:zzy6-a/vision-use
 ```
 
 After installing, **restart DSH** (the `client.js` half registers at boot). Refresh the browser and the status pill appears below the composer.
@@ -81,18 +83,19 @@ The agent will automatically: start the overlay → `view_screen` to look → `c
 
 | Item | Requirement |
 |---|---|
-| Host | **Windows + WSL2** (the agent runs in WSL and drives the Windows desktop) |
-| Absolute-path interop | WSL interop enabled (`/proc/sys/fs/binfmt_misc/WSLInterop` = enabled) |
+| Host (auto-detected) | **Windows native** or **Windows + WSL2**; the plugin detects where DSH runs and picks the matching path/subprocess strategy |
+| Interop when on WSL | WSL interop enabled (`/proc/sys/fs/binfmt_misc/WSLInterop` = enabled); the plugin uses `\\wsl.localhost\<distro>` UNC paths automatically |
 | Windows side | PowerShell 5.1 (built in) + .NET Framework (System.Drawing/WinForms) |
 | DSH | `>= 0.1.5-rc.1` |
 | Node | The plugin itself has zero runtime dependencies (pure ESM + PowerShell child processes) |
+| Linux / macOS | Desktop control is unsupported; `view_screen` and hands tools fail with a clear error, while `view_image` still works |
 
 ---
 
 ## Architecture
 
 ```
-dsh-vision/
+vision-use/
 ├── lib/index.js        host half: 8 tools + 2 API routes + systemPrompt capability declaration
 ├── lib/client.js       browser half: composer-dock status pill
 ├── cordis.patch.yml    bundle layer: inserts the plugin row into the profile tree
@@ -103,6 +106,18 @@ dsh-vision/
     ├── wocr.ps1        Windows native OCR (zero-API-cost fallback, optional)
     └── TOOLKIT.md      toolkit documentation + 10 field-tested rules
 ```
+
+### Environment auto-detection
+
+At startup the plugin inspects `process.platform`, `WSL_DISTRO_NAME` / `WSL_INTEROP`, and `/proc/version`:
+
+| Detected | Behavior |
+|---|---|
+| Windows native | calls `powershell.exe` directly; flags/state/heartbeat go to `%TEMP%` |
+| WSL + Windows | calls `powershell.exe` through interop; flags/state/heartbeat go to `/tmp` and are exposed as `\\wsl.localhost\<distro>\tmp` for PowerShell |
+| Linux / macOS | desktop tools return a clear unsupported error; `view_image` keeps working |
+
+PowerShell children learn the cross-boundary flag directory through the `DSH_VISION_FLAG_DIR` env var (automatically added to `WSLENV` on WSL).
 
 **Vision**: images are returned as `content: [{type:'image', attachment}]`; the host's `collectImageRefs()` recursively collects them and sends them with the next request — this is DSH's official image channel, so **screenshots count as normal model vision tokens** (on the DeepSeek official route, roughly 369 tokens per image, capped at 384).
 
@@ -138,6 +153,7 @@ Privacy note: screenshots enter the current session context as image attachments
 - **WinUI (Notepad, etc.) does not accept injected Ctrl combinations**: `computer_key` may not work in those apps
 - **UIA coordinates are unreliable in custom-drawn UIs** (Edge tab bar, Windows 11 Notepad tabs return ∞ or wrong offsets): use `view_screen` to locate targets visually first
 - **Software with its own drawn cursor** (games, some Electron apps) cannot be overridden by the system-level cursor replacement
+- **Linux / macOS hosts**: only Windows native and WSL + Windows are supported; `view_image` still works, desktop tools fail clearly
 
 ---
 

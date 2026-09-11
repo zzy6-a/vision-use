@@ -1,10 +1,12 @@
-# DSH Computer Use · dsh-vision
+# Vision Use · DSH Computer Use
 
 [English](README_EN.md) | 中文
 
+> 仓库：`vision-use` · 包名：`dsh-vision`
+>
 > 让 DeepSeek Harness 的 Agent **真正看见你的屏幕、并动手操作 Windows 桌面** —— 带 Codex 风格的蓝色操作覆盖层（按 **Esc** 随时中止）。
 
-[![Download](https://img.shields.io/badge/Download-latest-2e7d32?style=flat&logo=github&logoColor=white)](https://github.com/zzy6-a/dsh-vision/releases/latest)
+[![Download](https://img.shields.io/badge/Download-latest-2e7d32?style=flat&logo=github&logoColor=white)](https://github.com/zzy6-a/vision-use/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![dsh-plugin](https://img.shields.io/badge/topic-dsh--plugin-2f6fed)](https://github.com/topics/dsh-plugin)
 
@@ -50,13 +52,13 @@
 ### 方式一：GitHub Release（推荐）
 
 ```bash
-dsh plugin --profile web add https://github.com/zzy6-a/dsh-vision/releases/download/v0.1.1/dsh-vision-0.1.1.tgz
+dsh plugin --profile web add https://github.com/zzy6-a/vision-use/releases/download/v0.2.0/dsh-vision-0.2.0.tgz
 ```
 
 ### 方式二：git 源
 
 ```bash
-dsh plugin --profile web add github:zzy6-a/dsh-vision
+dsh plugin --profile web add github:zzy6-a/vision-use
 ```
 
 装完**重启 DSH**（`client.js` 半边需要启动时注册），浏览器刷新后输入框下方会出现状态胶囊。
@@ -81,18 +83,19 @@ Agent 会自动：起覆盖层 → `view_screen` 看 → `computer_*` 动手 →
 
 | 项 | 要求 |
 |---|---|
-| 宿主 | **Windows + WSL2**（Agent 跑在 WSL，操控 Windows 桌面）|
-| 绝对路径互操作 | WSL interop 开启（`/proc/sys/fs/binfmt_misc/WSLInterop` = enabled）|
+| 宿主（自动识别） | **Windows 原生** 或 **Windows + WSL2**；插件自动识别 DSH 所在环境并选择对应路径/子进程方案 |
+| WSL 时的互操作 | WSL interop 开启（`/proc/sys/fs/binfmt_misc/WSLInterop` = enabled）；插件自动走 `\\wsl.localhost\<distro>` UNC 路径 |
 | Windows 侧 | PowerShell 5.1（系统自带）+ .NET Framework（System.Drawing/WinForms）|
 | DSH | `>= 0.1.5-rc.1` |
 | Node | 插件本身零运行时依赖（纯 ESM + 子进程调 PowerShell）|
+| Linux / macOS | 不支持桌面控制；`view_screen` 与 hands 工具会明确报错，`view_image` 仍可用 |
 
 ---
 
 ## 架构
 
 ```
-dsh-vision/
+vision-use/
 ├── lib/index.js        host 半边：8 个工具 + 2 条 API 路由 + systemPrompt 能力宣告
 ├── lib/client.js       browser 半边：composer-dock 状态胶囊
 ├── cordis.patch.yml    bundle 层：把插件行插入 profile 树
@@ -103,6 +106,18 @@ dsh-vision/
     ├── wocr.ps1        Windows 原生 OCR（零 API 成本兜底，可选）
     └── TOOLKIT.md      工具链详细文档 + 10 条实战纪律
 ```
+
+### 环境自动识别
+
+插件启动时检测 `process.platform`、`WSL_DISTRO_NAME` / `WSL_INTEROP` 与 `/proc/version`：
+
+| 检测结果 | 行为 |
+|---|---|
+| Windows 原生 | 直接调 `powershell.exe`；flag/state/heartbeat 写 `%TEMP%` |
+| WSL + Windows | 调 `powershell.exe` interop；flag/state/heartbeat 写 `/tmp`，并自动转成 `\\wsl.localhost\<distro>\tmp` 供 PowerShell 读写 |
+| Linux / macOS | 桌面工具给出明确不支持错误；`view_image` 不受影响 |
+
+子进程统一通过 `DSH_VISION_FLAG_DIR` 环境变量获知跨端 flag 目录（WSL 下会自动加入 `WSLENV` 透传）。
 
 **视觉原理**：图片以 `content: [{type:'image', attachment}]` 形式返回，宿主 `collectImageRefs()` 递归收集后随下一次请求发给模型 —— 这是 DSH 官方的图片通道，因此**截图会正常计入模型视觉 token**（DeepSeek 官方路由对单图约 369 tokens，上限 384）。
 
@@ -138,6 +153,7 @@ dsh-vision/
 - **WinUI（记事本等）不认注入的 Ctrl 组合键**：`computer_key` 对这类应用可能无效
 - **自绘 UI 的 UIA 坐标不可信**（Edge 标签栏、Win11 记事本标签页会返回 ∞ 或错位）：请先 `view_screen` 肉眼定位再点
 - **带自绘光标的软件**（游戏、部分 Electron 应用）无法被系统级光标替换覆盖
+- **Linux / macOS 宿主**：当前只支持 Windows 原生与 WSL + Windows；其他系统下 `view_image` 可用，桌面工具会明确报错
 
 ---
 

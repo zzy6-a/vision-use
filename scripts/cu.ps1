@@ -11,8 +11,10 @@
 )
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
+# ---- flag 目录：由插件通过 DSH_VISION_FLAG_DIR 传入（Windows 原生 = %TEMP%，WSL = \\wsl.localhost\<distro>\tmp）----
+$FlagDir = if ($env:DSH_VISION_FLAG_DIR) { $env:DSH_VISION_FLAG_DIR } else { $env:TEMP }
 # ---- ESC cancel guard: 用户在覆盖层按 Esc 后，所有动作拒动 ----
-$cancelFlag = '\\wsl.localhost\Ubuntu\tmp\dsh_agent_cancel.flag'
+$cancelFlag = Join-Path $FlagDir 'dsh_agent_cancel.flag'
 if ($Action -ne 'clear-cancel') {
   if (Test-Path -LiteralPath $cancelFlag) {
     Write-Output 'CANCELLED: 用户按下了 Esc，本操作已中止（恢复用 -Action clear-cancel）'
@@ -52,8 +54,7 @@ function Set-CuState([string]$mode, [int]$cx = -1, [int]$cy = -1) {
     $ts = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
     $click = if ($cx -ge 0) { '{"x":' + $cx + ',"y":' + $cy + ',"t":' + $ts + '}' } else { 'null' }
     $json = '{"mode":"' + $mode + '","ts":' + $ts + ',"click":' + $click + '}'
-    Set-Content -LiteralPath (Join-Path $env:TEMP 'dsh_cu_state.json') -Value $json -Encoding UTF8 -ErrorAction SilentlyContinue
-    Set-Content -LiteralPath '\\wsl.localhost\Ubuntu\tmp\dsh_cu_state.json' -Value $json -Encoding UTF8 -ErrorAction SilentlyContinue
+    Set-Content -LiteralPath (Join-Path $FlagDir 'dsh_cu_state.json') -Value $json -Encoding UTF8 -ErrorAction SilentlyContinue
   } catch { }
 }
 
