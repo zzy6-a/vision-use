@@ -273,23 +273,40 @@ if ($ActivateHwnd -ne 0) {
 }
 
 # ===== 危险目标保护 =====
-# 前台是 DSH 宿主自身时拒绝注入：测试/自动化输入会直接落进用户正在编辑的消息框。
-# 必须放在这里 —— CuWin 类型在文件上方 Add-Type 定义，放早了整个 try 会静默失败。
+# 目的：别让自动化键盘事件落进用户正在编辑的消息框。
+# 判定必须基于「这次要操作哪个窗口」，而不是「此刻前台是谁」——
+# overlay 拉起/收起、用户切窗口都会让前台抖动，按前台判会随机误杀（实测：
+# DSH 在前台时 computer_key/computer_sequence 全部 exit 8，而 overlay 抢到前台
+# 的瞬间又莫名放行）。规则：
+#   · 显式指定了 ActivateHwnd 且它不是宿主进程 → 放行（上面已把它切到前台）；
+#   · 只往宿主自己身上注入 → 仍拒绝，并告诉调用方怎么带 hwnd 重试。
 if (($HANDS_ACTIONS -contains $Action) -and (-not $Force)) {
   $forbidName = $env:DSH_VISION_FORBID_TARGET
   if ($forbidName) {
-    try {
-      $fgH2 = [CuWin]::GetForegroundWindow()
-      $fpid2 = [uint32]0
-      [void][CuWin]::GetWindowThreadProcessId($fgH2, [ref]$fpid2)
-      if ($fpid2 -ne 0) {
-        $proc2 = Get-Process -Id $fpid2 -ErrorAction SilentlyContinue
-        if ($proc2 -and ($proc2.ProcessName -like "*$forbidName*")) {
-          Write-Output ("REFUSED: 前台窗口属于 " + $proc2.ProcessName + "（宿主自身），拒绝注入 —— 会污染你正在编辑的消息框。确需操作请加 -Force。")
-          exit 8
+    $targetsHost = $false
+    if ($ActivateHwnd -ne 0) {
+      try {
+        $tpid2 = [uint32]0
+        [void][CuWin]::GetWindowThreadProcessId([IntPtr]$ActivateHwnd, [ref]$tpid2)
+        $tproc2 = if ($tpid2 -ne 0) { Get-Process -Id $tpid2 -ErrorAction SilentlyContinue } else { $null }
+        $targetsHost = [bool]($tproc2 -and ($tproc2.ProcessName -like "*$forbidName*"))
+      } catch { $targetsHost = $false }
+    }
+    if ($ActivateHwnd -eq 0 -or $targetsHost) {
+      try {
+        $fgH2 = [CuWin]::GetForegroundWindow()
+        $fpid2 = [uint32]0
+        [void][CuWin]::GetWindowThreadProcessId($fgH2, [ref]$fpid2)
+        if ($fpid2 -ne 0) {
+          $proc2 = Get-Process -Id $fpid2 -ErrorAction SilentlyContinue
+          if ($proc2 -and ($proc2.ProcessName -like "*$forbidName*")) {
+            $hint = if ($ActivateHwnd -ne 0) { "（指定的 hwnd " + $ActivateHwnd + " 本身就属于宿主进程，换一个目标窗口）" } else { "（先用 uia_windows 取目标窗口 hwnd，再带 hwnd 重试：脚本会先把目标切到前台）" }
+            Write-Output ("REFUSED: 前台窗口属于 " + $proc2.ProcessName + "（宿主自身），拒绝注入 —— 键盘事件会落进你正在编辑的消息框。" + $hint + " 确需在当前窗口强推请加 -Force。")
+            exit 8
+          }
         }
-      }
-    } catch { Write-Output ("GUARD_SKIP: " + $_.Exception.Message) }
+      } catch { Write-Output ("GUARD_SKIP: " + $_.Exception.Message) }
+    }
   }
 }
 
