@@ -1,6 +1,6 @@
 {
   "name": "dsh-vision",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "description": "DSH Computer Use for Windows: see the screen, drive it with real input, and target controls by name through UI Automation (patterns click without moving your mouse). Adds action sequences, window/region capture with coordinate grids, and a Codex-style overlay with Esc abort.",
   "main": "./lib/index.js",
