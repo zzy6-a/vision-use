@@ -1,6 +1,6 @@
 {
   "id": "zzy6-a/vision-use",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "main": "./lib/index.js",
   "description": "DSH Computer Use: agent vision channel + desktop control, auto-detecting Windows native or WSL hosts. Mouse/keyboard tools with a forced Codex-style overlay, Esc abort, and a composer status pill.",
   "engines": {

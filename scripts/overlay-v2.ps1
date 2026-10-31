@@ -47,6 +47,7 @@ static int[] _keyVks = null;
 static int _modeUntil = 0;
 static string _autoMode = "idle";
 static bool _prevMouse = false;
+static bool _escPrev = false;
 static float _vis = 0f;
 static POINT _lastPos = new POINT();
 static int _lastMoveTick = 0;
@@ -198,7 +199,19 @@ static void RenderRippleWindow() {
   PushBitmapAt(_rHwnd, _rBmp, _rX - _rSize / 2, _rY - _rSize / 2);
 }
 public static string GetMode() { return _autoMode; }
-public static int EscDown() { return (GetAsyncKeyState(0x1B) & 0x8000) != 0 ? 1 : 0; }
+// 只在 Esc 的"新按下"瞬间返回 1。
+// GetAsyncKeyState 的 0x8000 是电平位：键一直按着就一直为真，机械卡住的 Esc
+// 或被别的程序压住的 Esc 会被判成反复取消。这里改判"按键事件"：边沿
+// （本次按下且上次未按下）或 0x0001（自上次查询以来按下过）——快速点按不漏，
+// 持续按住只触发一次。
+public static int EscPressed() {
+  short st = GetAsyncKeyState(0x1B);
+  bool down = (st & 0x8000) != 0;
+  bool pressedSinceLastQuery = (st & 0x0001) != 0;
+  bool edge = down && !_escPrev;
+  _escPrev = down;
+  return (edge || pressedSinceLastQuery) ? 1 : 0;
+}
 '@
 
 function FlagPath([string]$k) { return (Join-Path $FlagDir ("dsh_agent_" + $k + ".flag")) }
@@ -465,7 +478,9 @@ $tick.Add_Tick({
     }
   }
   if (($script:n % 3) -eq 0) {
-    if ([CU.Eng]::EscDown() -eq 1) {
+    # 启动后 400ms 内不判 Esc：覆盖层刚出现时的按键残留不该立刻算成取消。
+    $escWarm = ([DateTime]::UtcNow - $script:startTs).TotalMilliseconds -ge 400
+    if ($escWarm -and ([CU.Eng]::EscPressed() -eq 1)) {
       $script:cancelled = $true
       SetFlag 'cancel' 'esc'
       $cb = Render-Border $vs.Width $vs.Height $true

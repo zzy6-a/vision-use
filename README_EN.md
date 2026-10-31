@@ -47,7 +47,7 @@ English | [中文](README.md)
 
 - **One cursor set** (arrow / I-beam / hand) in a unified blue-and-white gradient, while **keeping Windows' native context switching**
 - **Overlay always on**: every hands operation (move/click/type/key) is forced to bring up the overlay first — no silent control
-- **Esc abort**: the keypress writes a cancel flag → the overlay exits → every subsequent action is rejected
+- **Esc abort**: a single **press** aborts the current turn — it writes a cancel flag, the overlay exits, and later actions in that turn are rejected. The flag is one-shot: it expires when the next turn starts, when the plugin reloads, or after 5 minutes; holding the key (or a stuck key) triggers it once instead of locking the plugin forever
 - **Task-level keep-alive**: while the agent is still working in this turn (thinking or running other tools), the overlay stays up; it packs up about 4 seconds after the turn ends. The overlay's own idle timeout remains as a fallback (`idle_seconds`, default 30, 0 = disable fallback)
 - **Status pill under the composer**: colored dot + `CU idle/move/type/click` + a Stop button
 
